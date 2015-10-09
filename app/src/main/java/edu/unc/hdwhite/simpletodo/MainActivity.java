@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> items = new ArrayList<>();
     ArrayAdapter<String> itemAdapter;
     ListView lvItems;
-
+//second try
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
