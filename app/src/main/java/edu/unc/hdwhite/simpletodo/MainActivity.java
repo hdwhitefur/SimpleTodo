@@ -1,15 +1,20 @@
 package edu.unc.hdwhite.simpletodo;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -26,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
         lvItems = (ListView)findViewById(R.id.lvItems);
         itemAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemAdapter);
-        items.add("Test1");
-        items.add("Test2");
         setupListViewListener();
     }
 
@@ -40,16 +43,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSearch(View v){
         String query = ((EditText)findViewById(R.id.etNewItem)).getText().toString();
-        try {
-            URL url = new URL("https://www.googleapis.com/books/v1/volumes?q=" + query);
-            HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            //readStream(in);
-            urlConnection.disconnect();
-        } catch(Exception e) {
-            //http://developer.android.com/training/basics/network-ops/connecting.html
-            //http://developer.android.com/reference/java/net/HttpURLConnection.html
-        }
+
+    }
+
+    private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
+        Log.d("Debug", "Made it to the read");
+        Reader reader = null;
+        reader = new InputStreamReader(stream, "UTF-8");
+        char[] buffer = new char[len];
+        reader.read(buffer);
+        return new String(buffer);
     }
 
     private void setupListViewListener(){
@@ -64,5 +67,41 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    private class WebpageDownload extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+            return downloadUrl(urls[0]);
+        }
+
+        private String downloadUrl(String urlText) {
+            InputStream in = null;
+            int len = 500;
+            try {
+                URL url = new URL(urlText);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                Log.d("Debug", "Opened connection");
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                Log.d("Debug", "Set paramas");
+                conn.connect();
+                Log.d("Debug", "Connected");
+                int response = conn.getResponseCode();
+                Log.d("Debug", "The response is: " + response);
+                in = conn.getInputStream();
+                return readIt(in, len);
+            } catch (Exception e) {
+                Log.d("Debug", "Caught an exception");
+                e.printStackTrace();
+            } finally {
+                if(in != null) {
+                    try {in.close();}
+                    catch (Exception e){}
+                }
+            }
+        }
     }
 }
