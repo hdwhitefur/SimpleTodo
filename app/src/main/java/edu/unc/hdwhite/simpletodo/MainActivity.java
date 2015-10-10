@@ -14,15 +14,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 //YoYOYO
+//what the FUCK
 public class MainActivity extends AppCompatActivity {
     ArrayList<String> items = new ArrayList<>();
     ArrayAdapter<String> itemAdapter;
     ListView lvItems;
+    String output;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,16 +44,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSearch(View v){
         String query = ((EditText)findViewById(R.id.etNewItem)).getText().toString();
-
-    }
-
-    private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        Log.d("Debug", "Made it to the read");
-        Reader reader = null;
-        reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
+        output = "FAILURE";
+        new WebpageDownload().execute("http://www.google.com");
+        Log.d("SUCCESS", output);
     }
 
     private void setupListViewListener(){
@@ -70,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class WebpageDownload extends AsyncTask<String, Void, String> {
+
         @Override
         protected String doInBackground(String... urls) {
             return downloadUrl(urls[0]);
@@ -92,7 +87,9 @@ public class MainActivity extends AppCompatActivity {
                 int response = conn.getResponseCode();
                 Log.d("Debug", "The response is: " + response);
                 in = conn.getInputStream();
-                return readIt(in, len);
+                output = readIt(in, len);
+                Log.d("Debug", "Read is: " + output);
+                return output;
             } catch (Exception e) {
                 Log.d("Debug", "Caught an exception");
                 e.printStackTrace();
@@ -102,6 +99,16 @@ public class MainActivity extends AppCompatActivity {
                     catch (Exception e){}
                 }
             }
+            return "ERROR";
+        }
+
+        private String readIt(InputStream stream, int len) throws IOException {
+            Log.d("Debug", "Made it to the read");
+            Reader reader = null;
+            reader = new InputStreamReader(stream, "UTF-8");
+            char[] buffer = new char[len];
+            reader.read(buffer);
+            return new String(buffer);
         }
     }
 }
